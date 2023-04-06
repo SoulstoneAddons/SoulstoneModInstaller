@@ -112,9 +112,26 @@ impl Installer {
         let mut bepinex_zip = zip::ZipArchive::new(bepinex_zip).map_err(InstallerError::ZipError)?;
         bepinex_zip.extract(&temp_path).map_err(InstallerError::ZipError)?;
 
-        // move bepinex
-        let bepinex_temp_path = temp_path.join("BepInEx");
-        std::fs::rename(&bepinex_temp_path, &self.path).map_err(InstallerError::IoError)?;
+
+        // wait for extraction to finish
+        std::thread::sleep(std::time::Duration::from_secs(1));
+
+        // remove zip file from temp folder
+        std::fs::remove_file(&bepinex_zip_path).map_err(InstallerError::IoError)?;
+
+        // move contents of temp folder to game folder
+        let temp_path = Path::new(&self.path).join("temp");
+        // move contents of temp folder to game folder which means back one folder
+        let game_path = Path::new(&self.path);
+
+        for entry in std::fs::read_dir(&temp_path).map_err(InstallerError::IoError)? {
+            let entry = entry.map_err(InstallerError::IoError)?;
+            let path = entry.path();
+            let file_name = path.file_name().unwrap().to_str().unwrap();
+            let game_path = game_path.join(file_name);
+            std::fs::rename(&path, &game_path).map_err(InstallerError::IoError)?;
+        }
+
 
         // delete temp folder
         std::fs::remove_dir_all(&temp_path).map_err(InstallerError::IoError)?;

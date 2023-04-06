@@ -91,8 +91,12 @@ impl Plugin {
             return Err(PluginError::PluginError("Asset is not a dll or zip file".to_string()));
         }
 
-        let file_path = format!("{}/{}", path, asset.name);
+        if !std::path::Path::new(&path).exists() {
+            std::fs::create_dir_all(&path).unwrap();
+        }
 
+        let file_path = format!("{}/{}", path, asset.name);
+        println!("Saving asset to: {}", file_path);
         // save asset to path
         let mut file = std::fs::File::create(&file_path).unwrap();
         file.write_all(&response.bytes().unwrap()).unwrap();
