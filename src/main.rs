@@ -2,10 +2,12 @@ mod steam;
 mod installer;
 mod config;
 mod plugins;
-mod github;
+mod github_repositories;
+mod plugin;
+mod github_releases;
 
 use std::io::Read;
-use ansi_term::Color::{Red, White, Green};
+use ansi_term::Color::{Red, White, Green, Yellow};
 use ansi_term::{Colour, enable_ansi_support};
 use crate::config::*;
 use crate::installer::Installer;
@@ -24,6 +26,8 @@ fn main() {
     println!("{} v{}", TITLE, VERSION);
     println!("Author: {}", AUTHOR);
     println!("License: {}", LICENSE);
+    println!("{}", Red.paint("Note: If you get rate-limited, please wait a few minutes and try again."));
+    println!("{}", Red.paint("Unfortunately, this is a limitation of GitHub's API."));
     println!();
 
     begin_installation();
@@ -63,13 +67,24 @@ fn begin_installation() {
 
     println!("{}", gray.paint("Installing BepInEx..."));
 
+    let result = installer.install();
     // Install BepInEx
-    if let Err(err) = installer.install() {
+    if let Err(err) = result {
         println!("{}", Red.paint(format!("{}", err)));
         return;
     }
+    let result = result.unwrap();
+    if result.installed_bepinex.is_some() && result.installed_bepinex.unwrap() {
+        println!("{}", Green.paint("BepInEx installed!"));
+    } else {
+        println!("{}", Yellow.paint("BepInEx already installed!"));
+    }
 
-    // Installation successful
-    println!("{}", Green.paint("BepInEx installed!"));
-    println!("{}", White.paint("Enjoy!"));
+    // Install Plugins
+    if result.plugins.is_some() {
+        let plugins = result.plugins.unwrap();
+        println!("{}", Green.paint(format!("{} Plugins installed!", plugins.len())));
+    } else {
+        println!("{}", Green.paint("No plugins installed!"));
+    }
 }

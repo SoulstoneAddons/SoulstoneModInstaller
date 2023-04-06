@@ -1,5 +1,6 @@
 use std::path::Path;
-use crate::config::BEPINEX_URL;
+use crate::config::{BEPINEX_URL, USER_AGENT};
+use crate::plugin::Plugin;
 use crate::plugins::Plugins;
 
 pub struct Installer {
@@ -13,6 +14,11 @@ pub enum InstallerError {
     ZipError(zip::result::ZipError),
     ReqwestError(reqwest::Error),
     InstallError(String),
+}
+
+pub struct InstallResult {
+    pub plugins: Option<Vec<Plugin>>,
+    pub installed_bepinex: Option<bool>,
 }
 
 // implement display trait for custom error type
@@ -34,28 +40,33 @@ impl Installer {
         }
     }
 
-    pub fn install(&self) -> Result<(), InstallerError> {
+    pub fn install(&self) -> Result<InstallResult, InstallerError> {
+        let mut installed_bepinex: Option<bool> = None;
 
         // check if installed
-        if self.is_installed() {
-            return Err(InstallerError::InstallError("BepInEx is already installed!".to_string()));
+        if !self.is_installed() {
+            // download bepinex
+            self.setup()?;
+            installed_bepinex = Some(true);
         }
 
-        // download bepinex
-        self.setup()?;
 
         // download plugins
-        self.download_plugins()?;
+        let plugins = self.download_plugins()?;
 
-        return Ok(());
+        return Ok(InstallResult {
+            plugins: Some(plugins),
+            installed_bepinex: None,
+        });
     }
 
-    fn download_plugins(&self) -> Result<(), InstallerError> {
+    fn download_plugins(&self) -> Result<Vec<Plugin>, InstallerError> {
         let plugins = Plugins::get_plugins().map_err(InstallerError::ReqwestError)?;
+        let mut installed_plugins = Vec::new();
 
         for plugin in plugins {
             // prompt do you want to install plugin (Y/N)
-            let name = plugin.name.unwrap();
+            let name = plugin.name.clone();
             println!("Do you want to install {}? (Y/N)", name);
             let mut input = String::new();
             std::io::stdin().read_line(&mut input).unwrap();
@@ -65,9 +76,18 @@ impl Installer {
             }
             // proceed to download plugin
             println!("Downloading {}...", name);
+            let result = plugin.download(self.path.as_str());
+            if result.is_err() {
+                // get error
+                let error = result.err().unwrap();
+                println!("Error downloading {}: {}", name, error);
+                continue;
+            }
+            println!("{} downloaded successfully!", name);
+            installed_plugins.push(plugin);
         }
 
-        return Ok(());
+        return Ok(installed_plugins);
     }
 
     fn setup(&self) -> Result<(), InstallerError> {
@@ -81,7 +101,7 @@ impl Installer {
         let bepinex_zip_path = temp_path.join("bepinex.zip");
         let bepinex_zip = reqwest::blocking::Client::new()
             .get(BEPINEX_URL)
-            .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36")
+            .header("User-Agent", USER_AGENT)
             .send().map_err(InstallerError::ReqwestError)?;
 
         let bepinex_zip = bepinex_zip.bytes().map_err(InstallerError::ReqwestError)?;
