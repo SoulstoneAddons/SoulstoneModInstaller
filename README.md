@@ -1,3 +1,6 @@
+![example workflow](https://github.com/SoulstoneAddons/SoulstoneModInstaller/actions/workflows/rust.yml/badge.svg) ![GitHub all releases](https://img.shields.io/github/downloads/SoulstoneAddons/SoulstoneModInstaller/total?style=for-the-badge)
+
+
 # SoulstoneModInstaller
 
 Install BepInEx easily for Soulstone Survivors
