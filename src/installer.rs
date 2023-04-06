@@ -56,7 +56,7 @@ impl Installer {
 
         return Ok(InstallResult {
             plugins: Some(plugins),
-            installed_bepinex: None,
+            installed_bepinex,
         });
     }
 
