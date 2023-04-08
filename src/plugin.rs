@@ -38,7 +38,6 @@ impl Plugin {
         // the url is the html_url from the github api
         // get the latest release from url + /releases/latest
         let url = format!("{}/releases", self.url);
-        println!("Getting release from: {}", url);
         let response = reqwest::blocking::Client::new()
             .get(&url)
             .header("User-Agent", USER_AGENT)
@@ -79,7 +78,7 @@ impl Plugin {
         let asset = asset.unwrap();
 
         // download asset
-        println!("Found asset: {}", asset.name);
+        println!("Found Release");
         let response = reqwest::blocking::Client::new()
             .get(&asset.browser_download_url)
             .header("User-Agent", USER_AGENT)
@@ -96,7 +95,6 @@ impl Plugin {
         }
 
         let file_path = format!("{}/{}", path, asset.name);
-        println!("Saving asset to: {}", file_path);
         // save asset to path
         let mut file = std::fs::File::create(&file_path).unwrap();
         file.write_all(&response.bytes().unwrap()).unwrap();

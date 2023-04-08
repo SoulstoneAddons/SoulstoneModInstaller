@@ -1,4 +1,6 @@
 use std::path::Path;
+use ansi_term::Color::Red;
+use ansi_term::Style;
 use crate::config::{BEPINEX_URL, USER_AGENT};
 use crate::plugin::Plugin;
 use crate::plugins::Plugins;
@@ -67,20 +69,24 @@ impl Installer {
         for plugin in plugins {
             // prompt do you want to install plugin (Y/N)
             let name = plugin.name.clone();
-            println!("Do you want to install {}? (Y/N)", name);
+            let description = plugin.description.clone();
+            println!("Do you want to install {}? [Y] Yes [N] No", name);
+            println!("{}{}", Style::new().bold().paint("Description: "), description);
             let mut input = String::new();
             std::io::stdin().read_line(&mut input).unwrap();
             let input = input.trim().to_lowercase();
             if input != "y" {
                 continue;
             }
+
             // proceed to download plugin
             println!("Downloading {}...", name);
             let result = plugin.download(self.path.as_str());
             if result.is_err() {
                 // get error
                 let error = result.err().unwrap();
-                println!("Error downloading {}: {}", name, error);
+                let arrow = "\u{2514}\u{2500}\u{2500}\u{2500} ";
+                println!("{}", Red.paint(format!("Error downloading {}.\n{}Reason: {}", name, arrow, error)));
                 continue;
             }
             println!("{} downloaded successfully!", name);

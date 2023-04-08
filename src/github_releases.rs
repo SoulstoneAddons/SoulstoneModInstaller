@@ -34,7 +34,7 @@ pub struct Release {
     pub zipball_url: String,
     pub body: String,
     #[serde(rename = "mentions_count")]
-    pub mentions_count: i64,
+    pub mentions_count: Option<i64>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
