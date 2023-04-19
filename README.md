@@ -1,5 +1,8 @@
 ![example workflow](https://github.com/SoulstoneAddons/SoulstoneModInstaller/actions/workflows/rust.yml/badge.svg)
 
+# It is archived and is no longer in use.
+Please use MelonLoader's installer to install the mod loader.
+[here](https://melonwiki.xyz/#/?id=requirements)
 
 # SoulstoneModInstaller
 
